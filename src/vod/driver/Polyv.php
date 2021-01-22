@@ -17,7 +17,7 @@ class Polyv implements VodInterface
         'readtoken' => '',
 //        'subAccountAppId' => 'q7Hvi9VDpp',//子账号的appId
 //        'subAccountSecretkey' => 'ebfd6371984448b0a1cb28e6f84bf2d9',//子账号的sercrety
-        'domain' => 'http://api.polyv.net',
+        'domain' => 'https://api.polyv.net',
     ];
 
     public function __construct(array $config = [])
@@ -104,7 +104,7 @@ class Polyv implements VodInterface
         $param = [
             'vid' => $id
         ];
-        return $this->post($uri, $param);
+        return $this->post($uri, $param)[0];
     }
 
     /**
@@ -131,12 +131,24 @@ class Polyv implements VodInterface
         $param = [
             'vid' => $id
         ];
-        $return = $this->post($uri, $param);
-        if (200 === $return['code']) {
-            return true;
-        }
-        throw new Exception($return['message'], $return['code']);
+        $this->post($uri, $param);
+        return true;
     }
+
+    /**
+     * 获取用户空间及流量情况
+     */
+    public function userSpace(string $date = null):array
+    {
+        $uri = "/v2/user/{$this->config['userid']}/main";
+        $param = [];
+        if(!is_null($date)){
+            $param['date'] = $date;
+        }
+        return $this->post($uri, $param);
+    }
+
+
 
     public function sign(array $param): string
     {
@@ -168,7 +180,11 @@ class Polyv implements VodInterface
         $url = $this->config['domain'] . $uri;
         $param['sign'] = $this->sign($param);
         $data = http_get($url, $param);
-        return $data;
+        if(200 !== $data['code'])
+        {
+            throw new \Exception($data['message'], (int) "30{$data['code']}");
+        }
+        return $data['data'];
     }
 
     protected function post(string $uri, array $param = null): array
@@ -183,7 +199,11 @@ class Polyv implements VodInterface
         $url = $this->config['domain'] . $uri;
         $param['sign'] = $this->sign($param);
         $data = http_post($url, $param);
-        return $data;
+        if(200 !== $data['code'])
+        {
+            throw new \Exception($data['message'], (int) "30{$data['code']}");
+        }
+        return $data['data'];
     }
 
     protected function get_client_ip()
