@@ -4,6 +4,9 @@
 namespace uukule;
 
 
+use uukule\vod\core\interface_api\PlayerInterface;
+use uukule\vod\core\VideoItems;
+
 interface VodInterface
 {
 
@@ -37,7 +40,7 @@ interface VodInterface
      * @param array $where
      * @return array
      */
-    public function list(array $where): array;
+    public function list(array $where): VideoItems;
 
     /**
      * 删除视频
@@ -47,5 +50,10 @@ interface VodInterface
      */
     public function delete(string $id): bool;
 
+    /**
+     * 获取播放信息
+     * @return PlayerInterface
+     */
+    public function player();
 
 }

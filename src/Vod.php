@@ -17,6 +17,18 @@ namespace uukule;
 class Vod
 {
 
+    const VOD_STATUS_UPLOADING = 0; //上传中
+    const VOD_STATUS_UPLOAD_FAIL = 1; //上传失败
+    const VOD_STATUS_UPLOAD_SUCCESS = 2; //上传完成
+    const VOD_STATUS_TRANSCODE_AWIT = 4; //等待转码
+    const VOD_STATUS_TRANSCODING = 8; //转码中
+    const VOD_STATUS_TRANSCODE_FAIL = 16; //转码失败
+    const VOD_STATUS_AUDIT_AWIT = 32; //等待审核
+    const VOD_STATUS_AUDIT_PASS = 64; //审核不通过
+    const VOD_STATUS_NORMAL = 128; //已发布
+    const VOD_STATUS_DELETE = 256; //视频已删除
+
+
     /**
      * @var array 文件的实例
      */

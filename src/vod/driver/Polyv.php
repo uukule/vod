@@ -5,7 +5,13 @@ namespace uukule\vod\driver;
 
 
 use think\Exception;
+use uukule\vod\core\interface_api\PlayerInterface;
+use uukule\vod\core\VideoItems;
+use uukule\vod\driver\polyv\Cate;
+use uukule\vod\driver\polyv\Player;
+use uukule\vod\driver\polyv\VideoList;
 use uukule\VodInterface;
+use uukule\vod\driver\polyv\Request;
 
 class Polyv implements VodInterface
 {
@@ -23,6 +29,7 @@ class Polyv implements VodInterface
     public function __construct(array $config = [])
     {
         $this->config = array_merge($this->config, $config);
+        Request::config($this->config);
     }
 
 
@@ -55,27 +62,26 @@ class Polyv implements VodInterface
 
     /**
      * 获取播放参数
+     *
      * @param string $id
-     * @param bool $encryptType
-     * @param array $viewerParam  观看用户参数
+     * @param bool $encryptType 是否加密
      * @return array
-     * @throws Exception
+     * @throws \Exception
      */
-    public function getPlayInfo(string $id, bool $encryptType = false, array $viewerParam = [], string $extraParams = 'default'): array
+    public function getPlayInfo(string $id, bool $encryptType = false): array
     {
         $response = [];
         $ts = (string)ceil(microtime(true) * 1000);
-        if ($encryptType) {
+        if ($encryptType)
+        {
             $data = [];
             $data['userId'] = $this->config['userid'];
             $data['videoId'] = $id;
             $data['ts'] = $ts;
             $data['viewerIp'] = $this->get_client_ip();
-            $data['viewerId'] = '';
-            $data['viewerName'] = '';
-            $data['extraParams'] = $extraParams;
-            $data = array_merge($data, $viewerParam);
-            var_dump($data);
+            $data['viewerId'] = '1';
+            $data['viewerName'] = '1';
+            $data['extraParams'] = '1';
             ksort($data);
             $concated = $this->config['secretkey'];
             foreach ($data as $k => $v) {
@@ -90,35 +96,6 @@ class Polyv implements VodInterface
         $response['vid'] = $id;
         $response['ts'] = $ts;
         $response['sign'] = md5($this->config['secretkey'] . $id . $ts);
-        return $response;
-    }
-
-    public function webPlayEncryptedVideo(string $vid, array $viewerParam = [], string $extraParams = 'default')
-    {
-        $ts = (string)ceil(microtime(true) * 1000);
-        $data = [];
-        $data['userId'] = $this->config['userid'];
-        $data['videoId'] = $vid;
-        $data['ts'] = $ts;
-        $data['viewerIp'] = $this->get_client_ip();
-        $data['viewerId'] = '';
-        $data['viewerName'] = '';
-        $data['extraParams'] = $extraParams;
-        $data = array_merge($data, $viewerParam);
-        ksort($data);
-        $concated = $this->config['secretkey'];
-        foreach ($data as $k => &$v) {
-            $v = urlencode($v);
-            $concated .= "{$k}{$v}";
-        }
-        $plain = $concated . $this->config['secretkey'];
-        $data['sign'] = strtoupper(md5($plain));
-        $url = 'https://hls.videocc.net/service/v1/token';
-        $result = http_post($url, $data);
-        $response['playsafe'] = $result['data']['token'];
-        $response['vid'] = $vid;
-        $response['sign'] = $data['sign'];
-        $response['ts'] = $ts;
         return $response;
     }
 
@@ -142,12 +119,12 @@ class Polyv implements VodInterface
      * @param array $where
      * @return array
      */
-    public function list(array $where = []): array
-    {
-        $uri = "/v2/video/{$this->config['userid']}/get-new-list";
-        $param = [];
-        return $this->post($uri, $param);
-    }
+//    public function list(array $where = []): array
+//    {
+//        $uri = "/v2/video/{$this->config['userid']}/get-new-list";
+//        $param = [];
+//        return $this->post($uri, $param);
+//    }
 
     /**
      * 删除视频
@@ -168,15 +145,16 @@ class Polyv implements VodInterface
     /**
      * 获取用户空间及流量情况
      */
-    public function userSpace(string $date = null): array
+    public function userSpace(string $date = null):array
     {
         $uri = "/v2/user/{$this->config['userid']}/main";
         $param = [];
-        if (!is_null($date)) {
+        if(!is_null($date)){
             $param['date'] = $date;
         }
         return $this->post($uri, $param);
     }
+
 
 
     public function sign(array $param): string
@@ -209,8 +187,9 @@ class Polyv implements VodInterface
         $url = $this->config['domain'] . $uri;
         $param['sign'] = $this->sign($param);
         $data = http_get($url, $param);
-        if (200 !== $data['code']) {
-            throw new \Exception($data['message'], (int)"30{$data['code']}");
+        if(200 !== $data['code'])
+        {
+            throw new \Exception($data['message'], (int) "30{$data['code']}");
         }
         return $data['data'];
     }
@@ -227,8 +206,9 @@ class Polyv implements VodInterface
         $url = $this->config['domain'] . $uri;
         $param['sign'] = $this->sign($param);
         $data = http_post($url, $param);
-        if (200 !== $data['code']) {
-            throw new \Exception($data['message'], (int)"30{$data['code']}");
+        if(200 !== $data['code'])
+        {
+            throw new \Exception($data['message'], (int) "30{$data['code']}");
         }
         return $data['data'];
     }
@@ -243,5 +223,27 @@ class Polyv implements VodInterface
             $ipaddress = $_SERVER['REMOTE_ADDR'];
         }
         return $ipaddress;
+    }
+
+    /**
+     * @return Cate
+     */
+    public function cate() : Cate
+    {
+        return new Cate();
+    }
+
+    /**
+     * @return PlayerInterface
+     */
+    public function player()
+    {
+        return new Player();
+    }
+
+    public function list(array $param = []) : VideoItems
+    {
+        $List = new VideoList();
+        return $List->list($param);
     }
 }
