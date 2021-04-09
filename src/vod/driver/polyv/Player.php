@@ -51,7 +51,7 @@ class Player extends Request implements PlayerInterface
         }
         $response['vid'] = $id;
         $response['ts'] = $ts;
-        $response['sign'] = md5($this->secretkey . $id . $ts);
+        $response['sign'] = strtoupper(md5($this->secretkey . $id . $ts));
         return $response;
     }
 
@@ -64,20 +64,24 @@ class Player extends Request implements PlayerInterface
         $data['viewerIp'] = $this->get_client_ip();
         $data['viewerId'] = $this->viewer['id'];
         $data['viewerName'] = $this->viewer['name'];
-        //$data['extraParams'] = '1';
+        $data['extraParams'] = '1';
         $data = array_filter($data, function ($val){
             return !(is_null($val) || '' === trim($val));
         });
 
         ksort($data);
-        $concated = $this->secretkey;
+        $plain = $this->secretkey;
         foreach ($data as $k => $v) {
-            $concated .= "{$k}{$v}";
+            $plain .= $k;
+            $plain .= 'viewerName' === $k ? urlencode($v): $v;
         }
-        $plain = $concated . $this->secretkey;
+        $plain .= $this->secretkey;
         Debug::add($plain);
         $data['sign'] = strtoupper(md5($plain));
         $url = 'https://hls.videocc.net/service/v1/token';
+        Debug::add($url);
+        Debug::add($data);
+        Debug::add(http_build_query($data));
         $result = http_post($url, $data);
         return  $result['data']['token'];
     }
