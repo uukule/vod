@@ -27,7 +27,7 @@ class VideoList extends Request
         $queryParam['numPerPage'] = $param['_rows'] ?? 30;
         $queryParam['published'] = $param['published'] ?? 0;
         $re = [];
-        if (!array_key_exists('keyword', $param)) {
+        if (empty($param['keyword'])) {
             $queryParam['startDate'] = $param['start_date'] ?? null;
             $queryParam['endDate'] = $param['end_date'] ?? null;
             $queryParam['startTime'] = $param['start_time'] ?? null;
@@ -57,9 +57,9 @@ class VideoList extends Request
             $vod->tags = explode(',', $item['tag']?? '');
             $response[] = $vod;
         }
-        $response->total = $re['total'];
-        $response->current_page = $queryParam['pageNum'];
-        $response->per_page = $queryParam['numPerPage'];
+        $response->total = (int) ($re['total'] ?? 0);
+        $response->current_page = (int) $queryParam['pageNum'];
+        $response->per_page = (int) $queryParam['numPerPage'];
         return $response;
     }
 
