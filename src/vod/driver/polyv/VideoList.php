@@ -10,6 +10,7 @@ use uukule\vod\core\VideoItems;
 class VideoList extends Request
 {
     protected $status = [
+        '6'  => Vod::VOD_STATUS_UPLOAD_SUCCESS,
         '60' => Vod::VOD_STATUS_NORMAL,
         '61' => Vod::VOD_STATUS_NORMAL,
         '10' => Vod::VOD_STATUS_TRANSCODE_AWIT,
@@ -48,11 +49,12 @@ class VideoList extends Request
             $vod->cover_url = $item['first_image'];
             $vod->description = $item['context'];
             $vod->video_id = $item['vid'];
-            $vod->duration = $item['duration'];
+            $vod->duration = $item['duration'] ?? null;
             $vod->size = $item['source_filesize'];
             $vod->create_time = $item['ptime'];
-            $vod->status = $this->status[$item['status']];
+            $vod->status = $this->status[$item['status']] ?? $item['status'];
             $vod->file_md5 = $item['md5checksum'] ?? '-';
+            $vod->tags = explode(',', $item['tag']?? '');
             $response[] = $vod;
         }
         $response->total = $re['total'];

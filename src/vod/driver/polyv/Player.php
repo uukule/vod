@@ -51,7 +51,7 @@ class Player extends Request implements PlayerInterface
         }
         $response['vid'] = $id;
         $response['ts'] = $ts;
-        $response['sign'] = strtoupper(md5($this->secretkey . $id . $ts));
+        $response['sign'] = md5($this->secretkey . $id . $ts);
         return $response;
     }
 

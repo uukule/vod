@@ -5,6 +5,7 @@ namespace uukule;
 
 
 use uukule\vod\core\interface_api\PlayerInterface;
+use uukule\vod\core\VideoItem;
 use uukule\vod\core\VideoItems;
 
 interface VodInterface
@@ -31,9 +32,9 @@ interface VodInterface
      * 获取单个视频信息
      *
      * @param string $id
-     * @return array
+     * @return VideoItem
      */
-    public function info(string $id): array;
+    public function info(string $id): VideoItem;
 
     /**
      * 全部视频列表

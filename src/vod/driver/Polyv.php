@@ -5,7 +5,9 @@ namespace uukule\vod\driver;
 
 
 use think\Exception;
+use uukule\Vod;
 use uukule\vod\core\interface_api\PlayerInterface;
+use uukule\vod\core\VideoItem;
 use uukule\vod\core\VideoItems;
 use uukule\vod\driver\polyv\Cate;
 use uukule\vod\driver\polyv\Player;
@@ -24,6 +26,16 @@ class Polyv implements VodInterface
 //        'subAccountAppId' => 'q7Hvi9VDpp',//子账号的appId
 //        'subAccountSecretkey' => 'ebfd6371984448b0a1cb28e6f84bf2d9',//子账号的sercrety
         'domain' => 'https://api.polyv.net',
+    ];
+
+    protected $status = [
+        '60' => Vod::VOD_STATUS_NORMAL,
+        '61' => Vod::VOD_STATUS_NORMAL,
+        '10' => Vod::VOD_STATUS_TRANSCODE_AWIT,
+        '20' => Vod::VOD_STATUS_TRANSCODING,
+        '50' => Vod::VOD_STATUS_AUDIT_AWIT,
+        '51' => Vod::VOD_STATUS_AUDIT_PASS,
+        '-1' => Vod::VOD_STATUS_DELETE,
     ];
 
     public function __construct(array $config = [])
@@ -103,28 +115,31 @@ class Polyv implements VodInterface
      * 获取单个视频信息
      *
      * @param string $id
-     * @return array
+     * @return VideoItem
      */
-    public function info(string $id): array
+    public function info(string $id):VideoItem
     {
         $uri = "/v2/video/{$this->config['userid']}/get-video-msg";
         $param = [
             'vid' => $id
         ];
-        return $this->post($uri, $param)[0];
+        $info = $this->post($uri, $param)[0];
+        $response = new VideoItem();
+        $response->video_id = $info['vid'];
+        $response->cover_url = $info['first_image'];
+        $response->title = $info['title'];
+        $response->status = $this->status[$info['status']];
+        $response->file_md5 = $info['md5checksum'];
+        $response->size = $info['source_filesize'];
+        $response->create_time = $info['ptime'];
+        $response->duration = $info['duration'] ?? null;
+        $response->description = $info['context'];
+        $response->tags = explode(',', $info['tag']?? '');
+        $response->snapshots = $info['imageUrls'];
+        return $response;
     }
 
-    /**
-     * 全部视频列表
-     * @param array $where
-     * @return array
-     */
-//    public function list(array $where = []): array
-//    {
-//        $uri = "/v2/video/{$this->config['userid']}/get-new-list";
-//        $param = [];
-//        return $this->post($uri, $param);
-//    }
+
 
     /**
      * 删除视频

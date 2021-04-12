@@ -185,6 +185,7 @@ class Request
         Debug::add($url);
         Debug::add(http_build_query($param));
         $dataArr = http_post($url, $param);
+        Debug::add($dataArr);
         if (empty($dataArr)) {
             throw new VodException('获取失败');
         }

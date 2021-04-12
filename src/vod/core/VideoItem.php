@@ -19,6 +19,8 @@ use Traversable;
  * @property string $create_time 视频创建时间 yyyy-MM-dd HH:mm:ss 东8区时间
  * @property string $update_time 视频最后更新时间 yyyy-MM-dd HH:mm:ss 东8区时间
  * @property string $file_md5 文件哈希值
+ * @property array $tags 标签
+ * @property array $snapshots 快照
  * @package uukule\vod\core
  *
  *
