@@ -47,7 +47,7 @@ class VideoList extends Request
             $vod = new VideoItem();
             $vod->title = $item['title'];
             $vod->cover_url = $item['first_image'];
-            $vod->description = $item['context'];
+            $vod->description = $item['context'] ?? '';
             $vod->video_id = $item['vid'];
             $vod->duration = $item['duration'] ?? null;
             $vod->size = $item['source_filesize'];
