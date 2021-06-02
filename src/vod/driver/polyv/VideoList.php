@@ -53,6 +53,7 @@ class VideoList extends Request
             $vod->size = $item['source_filesize'];
             $vod->create_time = $item['ptime'];
             $vod->status = $this->status[$item['status']] ?? $item['status'];
+            $vod->file_mp4_url = $item['mp4'] ?? '';
             $vod->file_md5 = $item['md5checksum'] ?? '-';
             $vod->tags = explode(',', $item['tag']?? '');
             $response[] = $vod;

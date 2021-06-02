@@ -16,6 +16,7 @@ use Traversable;
  * @property float $duration 视频时长。单位：秒。
  * @property int $cate_id 视频分类ID
  * @property string $cate_name 视频分类名称
+ * @property string $file_mp4_url 视频MP4链接地址
  * @property string $create_time 视频创建时间 yyyy-MM-dd HH:mm:ss 东8区时间
  * @property string $update_time 视频最后更新时间 yyyy-MM-dd HH:mm:ss 东8区时间
  * @property string $file_md5 文件哈希值
