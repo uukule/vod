@@ -27,7 +27,7 @@ class VideoList extends Request
         $queryParam['numPerPage'] = $param['_rows'] ?? 30;
         $queryParam['published'] = $param['published'] ?? 0;
         $re = [];
-        if (empty($param['keyword'])) {
+        if (empty($param['cataid']) && empty($param['keyword'])) {
             $queryParam['startDate'] = $param['start_date'] ?? null;
             $queryParam['endDate'] = $param['end_date'] ?? null;
             $queryParam['startTime'] = $param['start_time'] ?? null;
