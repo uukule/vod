@@ -22,6 +22,7 @@ use Traversable;
  * @property string $file_md5 文件哈希值
  * @property array $tags 标签
  * @property array $snapshots 快照
+ * @property string $source_data 原始数据
  * @package uukule\vod\core
  *
  *

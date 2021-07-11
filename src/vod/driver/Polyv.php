@@ -14,6 +14,7 @@ use uukule\vod\driver\polyv\Player;
 use uukule\vod\driver\polyv\VideoList;
 use uukule\VodInterface;
 use uukule\vod\driver\polyv\Request;
+use uukule\vod\driver\polyv\Video;
 
 class Polyv implements VodInterface
 {
@@ -109,6 +110,14 @@ class Polyv implements VodInterface
         $response['ts'] = $ts;
         $response['sign'] = md5($this->config['secretkey'] . $id . $ts);
         return $response;
+    }
+
+    /**
+     * @return Video
+     */
+    public function video() : Video
+    {
+        return new Video();
     }
 
     /**

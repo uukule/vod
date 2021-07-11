@@ -43,6 +43,7 @@ interface VodInterface
      */
     public function list(array $where): VideoItems;
 
+    public function video();
     /**
      * 删除视频
      *
