@@ -6,6 +6,7 @@ namespace uukule\vod\driver\polyv;
 
 use uukule\Vod;
 use uukule\vod\core\VideoItem;
+use uukule\vod\core\VideoItems;
 
 class Video extends Request
 {
@@ -20,30 +21,85 @@ class Video extends Request
         '-1' => Vod::VOD_STATUS_DELETE,
     ];
 
+    protected $sort = [
+        'create_time_aes' => 'creationTimeAsc',
+        'create_time_desc' => 'creationTimeDesc',
+        'play_times_aes' => 'playTimesAsc',
+        'play_times_desc' => 'playTimesDesc'
+    ];
+
+    public function list(array $param = []){
+        $uri = "/v2/video/search-videos";
+        $response = new VideoItems();
+        $queryParam = [
+            'userid' => $this->userid,
+            'filters' => 'basicInfo,metaData,transcodeInfo,snapshotInfo',
+            'containSubCate' => true,
+            'page' => $param['page'] ?? 1,
+            'pageSize' => $param['rows'] ?? $response->list_rows,
+            'cateId' => $param['cate_id'] ?? 1,
+            'title' => $param['title'] ?? '',
+            'tag' => $param['tag'] ?? '',
+            'status' => !empty($param['status']) ? array_search(($param['status'] ?? ''), $this->status) : '',
+            'startTime' => !empty($param['create_time'][0]) ? strtotime($param['create_time'][0]) * 1000 : '',
+            'endTime' => !empty($param['create_time'][1]) ? strtotime($param['create_time'][1]) * 1000 : '',
+            'encrypted' => isset($param['is_encrypt']) ? (int) $param['is_encrypt']: '',
+            'sort' => !empty($param['sort']) ? $this->sort[$param['sort']] : 'creationTimeDesc',
+        ];
+
+        $queryParam = array_filter($queryParam, fn($v)=> '' !== $v);
+        $result =  self::post($uri, $queryParam, 'signABA');
+        foreach ($result['data']['contents'] as $item) {
+            $vod = new VideoItem();
+            $vod->title = $item['basicInfo']['title'];
+            $vod->cover_url = $item['basicInfo']['coverURL'];
+            $vod->description = $item['basicInfo']['description'] ?? '';
+            $vod->video_id = $item['vid'];
+            $vod->duration = $item['basicInfo']['duration'] ?? null;
+            $vod->size = $item['basicInfo']['size'];
+            $vod->create_time = $item['basicInfo']['creationTime'];
+            $vod->status = $this->status[$item['basicInfo']['status']] ?? $item['basicInfo']['status'];
+            $vod->is_encrypt = (bool) $item['transcodeInfos'][0]['encrypt'];
+            $vod->file_mp4_url = $vod->is_encrypt ? '' : $item['transcodeInfos'][0]['playUrl'];
+            $vod->file_md5 = '-';
+            $vod->tags = explode(',', $item['basicInfo']['tag']?? '');
+            $vod->cate_id = (int) $item['basicInfo']['cateId'];
+            $vod->cate_name = $item['basicInfo']['cateName'];
+            $response[] = $vod;
+        }
+        $response->total = (int) ($result['data']['totalItems'] ?? 0);
+        $response->current_page = (int) $result['data']['pageNumber'];
+        $response->per_page = (int) $result['data']['totalPages'];
+        $response->list_rows = (int) $result['data']['pageSize'];
+        $response->last_page = (int) $result['data']['totalPages'];
+        return $response;
+    }
+
     public function read(string $id) : VideoItem
     {
         $response = [];
-        $uri = "/v2/video/{$this->userid}/video-info";
+        $uri = "/v2/video/{$this->userid}/get-video-info";
         $queryParam = [
             'vid' => $id
         ];
         $request = self::post($uri, $queryParam, 'signABA');
         $item = $request['data'][0];
         $vod = new VideoItem();
-        $vod->source_data = json_encode($item, JSON_UNESCAPED_UNICODE);
-        $vod->title = $item['title'];
-        $vod->cover_url = $item['first_image'];
-        $vod->description = $item['context'] ?? '';
+        $vod->title = $item['basicInfo']['title'];
+        $vod->cover_url = $item['basicInfo']['coverURL'];
+        $vod->description = $item['basicInfo']['description'] ?? '';
         $vod->video_id = $item['vid'];
-        $vod->duration = $item['duration'] ?? null;
-        $vod->size = $item['source_filesize'];
-        $vod->create_time = $item['ptime'];
-        $vod->status = $this->status[$item['status']] ?? $item['status'];
-        $vod->file_mp4_url = $item['mp4'] ?? '';
-        $vod->file_md5 = $item['md5checksum'] ?? '-';
-        $vod->tags = explode(',', $item['tag']?? '');
-        $vod->cate_id = (int) $item['cataid'];
-        $vod->cate_name = $item['cataname'];
+        $vod->duration = $item['basicInfo']['duration'] ?? null;
+        $vod->size = $item['basicInfo']['size'];
+        $vod->create_time = $item['basicInfo']['creationTime'];
+        $vod->status = $this->status[$item['basicInfo']['status']] ?? $item['basicInfo']['status'];
+        $vod->is_encrypt = (bool) $item['transcodeInfos'][0]['encrypt'];
+        $vod->file_mp4_url = $vod->is_encrypt ? '' : $item['transcodeInfos'][0]['playUrl'];
+        $vod->file_md5 = '-';
+        $vod->tags = explode(',', $item['basicInfo']['tag']?? '');
+        $vod->cate_id = (int) $item['basicInfo']['cateId'];
+        $vod->cate_name = $item['basicInfo']['cateName'];
+        $vod->source_data = json_encode($item, JSON_UNESCAPED_UNICODE);
         $response = $vod;
         return $response;
     }

@@ -12,20 +12,22 @@ use Traversable;
  * @property int $per_page
  * @property int $current_page
  * @property int $last_page
+ * @property int $list_rows
  * @package uukule\vod\core
  */
 class VideoItems implements  \IteratorAggregate, \ArrayAccess
 {
     private $items = [];
     private $data = [
-        'total' => 0,
-        'per_page' => 10,
+        'total' => null,
+        'per_page' => null,
         'current_page' => 1,
-        'last_page' => 1
+        'last_page' => null,
+        'list_rows' => 20
     ];
     public function __get($name)
     {
-        return $this->$name;
+        return $this->data[$name];
     }
 
     public function __set($name, $value)

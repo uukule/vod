@@ -56,6 +56,9 @@ class VideoList extends Request
             $vod->file_mp4_url = $item['mp4'] ?? '';
             $vod->file_md5 = $item['md5checksum'] ?? '-';
             $vod->tags = explode(',', $item['tag']?? '');
+            $vod->cate_id = (int) $item['cataid'];
+            $vod->cate_name = $item['cataname'];
+            $vod->is_encrypt = (bool) $item['seed'];
             $response[] = $vod;
         }
         $response->total = (int) ($re['total'] ?? 0);
@@ -70,9 +73,15 @@ class VideoList extends Request
         return self::post($uri, $queryParam, 'signBA');
     }
 
+    /**
+     * @param array $queryParam
+     * @return array
+     * @throws \think\Exception
+     * @doc https://help.polyv.net/index.html#/vod/api/video_management/search/search_video
+     */
     public function search(array $queryParam = []): array
     {
-        $uri = "/v2/video/{$this->userid}/search";
+        $uri = "/v2/video/{$this->userid}/search-videos";
         return self::post($uri, $queryParam, 'signBA');
     }
 }

@@ -23,6 +23,7 @@ use Traversable;
  * @property array $tags 标签
  * @property array $snapshots 快照
  * @property string $source_data 原始数据
+ * @property boolean $is_encrypt 是否已加密
  * @package uukule\vod\core
  *
  *
