@@ -19,10 +19,8 @@ class Cate extends Request
 
         $uri = "/v2/video/{$this->userid}/cataJson";
         $param['userid'] = $this->userid;
-        if (!is_null($cataid)) {
-            $param['cataid'] = $cataid;
-        }
-        return self::get($uri, $param, 'signBA')['data'];
+        $param['cataid'] = $cataid ?? '1';
+        return self::get($uri, $param, 'signCate')['data'];
     }
 
     /**
@@ -59,5 +57,10 @@ class Cate extends Request
             'cataid' => $cate_id
         ];
         return self::post($uri, $data, 'signBUA')['data'];
+    }
+
+    public function read(int $cate_id){
+        $re = $this->list($cate_id);
+        return $re[0];
     }
 }

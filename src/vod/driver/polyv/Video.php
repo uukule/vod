@@ -40,12 +40,18 @@ class Video extends Request
             'cateId' => $param['cate_id'] ?? 1,
             'title' => $param['title'] ?? '',
             'tag' => $param['tag'] ?? '',
-            'status' => !empty($param['status']) ? array_search(($param['status'] ?? ''), $this->status) : '',
             'startTime' => !empty($param['create_time'][0]) ? strtotime($param['create_time'][0]) * 1000 : '',
             'endTime' => !empty($param['create_time'][1]) ? strtotime($param['create_time'][1]) * 1000 : '',
             'encrypted' => isset($param['is_encrypt']) ? (int) $param['is_encrypt']: '',
             'sort' => !empty($param['sort']) ? $this->sort[$param['sort']] : 'creationTimeDesc',
         ];
+        if(empty($param['status'])){
+            $queryParam['status'] = '61,50,51,20,10';
+        }elseif(array_search(($param['status'] ?? ''), $this->status)){
+            $queryParam['status'] = array_search(($param['status'] ?? ''), $this->status);
+        }else{
+            $queryParam['status'] = '0';
+        }
 
         $queryParam = array_filter($queryParam, fn($v)=> '' !== $v);
         $result =  self::post($uri, $queryParam, 'signABA');

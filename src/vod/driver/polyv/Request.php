@@ -120,8 +120,8 @@ class Request
             $_arr[] = "{$k}={$v}";
         }
         $str = join('&', $_arr) . self::$config['secretkey'];
-        Debug::add($str);
         $sign = sha1($str);
+        Debug::add($str);
         return strtoupper($sign);
     }
 
@@ -149,6 +149,29 @@ class Request
     }
 
 
+    /**
+     * 分类列表加签
+     * @param array $param
+     * @return string
+     */
+    static public function signCate(array $param): string
+    {
+        unset($param['cataid']);
+        $param = array_filter($param, function ($val) {
+            return !(is_null($val) || '' === trim($val));
+        });
+        ksort($param);
+        $_arr = [];
+        foreach ($param as $k => $v) {
+            $_arr[] = "{$k}={$v}";
+        }
+        $str = join('&', $_arr) . self::$config['secretkey'];
+        $sign = sha1($str);
+        Debug::add($str);
+        return strtoupper($sign);
+    }
+
+
     static public function get(string $uri, array $param = [], string $sign_type = 'signABA')
     {
         if (!array_key_exists('ptime', $param)) {
@@ -157,7 +180,9 @@ class Request
         $param['sign'] = self::$sign_type($param);
 
         $url = self::$config['domain'] . $uri;
-        $data = http_get($url, $param);
+        $data = self::http_get($url, $param);
+        Debug::add($url);
+        Debug::add(http_build_query($param));
         $dataArr = json_decode($data, true);
         if (empty($dataArr)) {
             throw new VodException('获取失败');
@@ -184,7 +209,7 @@ class Request
         $url = self::$config['domain'] . $uri;
         Debug::add($url);
         Debug::add(http_build_query($param));
-        $dataArr = http_post($url, $param);
+        $dataArr = self::http_post($url, $param);
         Debug::add($dataArr);
         if (empty($dataArr)) {
             throw new VodException('获取失败');
@@ -206,4 +231,77 @@ class Request
         }
         return $ipaddress;
     }
+
+
+    /**
+     * CURL GET请求
+     *
+     * @param string $url
+     * @param array|null $data
+     * @return bool|string
+     */
+    static protected function http_get(string $url, array $data = null)
+    {
+        if (is_array($data)) {
+            $url .= '?' . http_build_query($data);
+        }
+        $oCurl = curl_init();
+        if (stripos($url, "https://") !== FALSE) {
+            curl_setopt($oCurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($oCurl, CURLOPT_SSL_VERIFYHOST, FALSE);
+            curl_setopt($oCurl, CURLOPT_SSLVERSION, 1); //CURL_SSLVERSION_TLSv1
+        }
+        curl_setopt($oCurl, CURLOPT_URL, $url);
+        curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($oCurl, CURLOPT_TIMEOUT, 1);
+        curl_setopt($oCurl, CURLOPT_TIMEOUT_MS, 1100);
+        $sContent = curl_exec($oCurl);
+        $aStatus = curl_getinfo($oCurl);
+        curl_close($oCurl);
+        if (intval($aStatus["http_code"]) == 200) {
+            return $sContent;
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * @param string $url
+     * @param null|string|array $post_data
+     * @return bool|mixed|string
+     * @throws Exception
+     */
+    static protected function http_post(string $url, $post_data)
+    {
+        try{
+
+            $oCurl = curl_init();
+            if (stripos($url, "https://") !== FALSE) {
+                curl_setopt($oCurl, CURLOPT_SSL_VERIFYPEER, FALSE);
+                curl_setopt($oCurl, CURLOPT_SSL_VERIFYHOST, FALSE);
+                curl_setopt($oCurl, CURLOPT_SSLVERSION, 1); //CURL_SSLVERSION_TLSv1
+            }
+            curl_setopt($oCurl, CURLOPT_URL, $url);
+            curl_setopt($oCurl, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($oCurl, CURLOPT_POST, true);
+            if (is_array($post_data)) {
+                curl_setopt($oCurl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+                $post_data = http_build_query($post_data);
+            }
+            curl_setopt($oCurl, CURLOPT_POSTFIELDS, $post_data);
+            $sContent = curl_exec($oCurl);
+            $aStatus = curl_getinfo($oCurl);
+            curl_close($oCurl);
+        }catch (\think\Exception $exception){
+            throw new Exception($exception->getMessage(), $exception->getCode());
+        }
+
+        if (intval($aStatus["http_code"]) !== 200) {
+            throw new Exception($sContent, $aStatus["http_code"]);
+        }
+        $json_data = json_decode($sContent, true);
+        return $json_data ? $json_data : $sContent;
+    }
+
 }
