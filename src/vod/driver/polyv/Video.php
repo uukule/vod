@@ -28,6 +28,12 @@ class Video extends Request
         'play_times_desc' => 'playTimesDesc'
     ];
 
+    /**
+     * @param array $param
+     * @return array|VideoItems
+     * @throws \think\Exception
+     * @doc https://help.polyv.net/index.html#/vod/api/video_management/search/search_video
+     */
     public function list(array $param = []){
         $uri = "/v2/video/search-videos";
         $response = new VideoItems();
@@ -68,7 +74,7 @@ class Video extends Request
             $vod->is_encrypt = (bool) $item['transcodeInfos'][0]['encrypt'];
             $vod->file_mp4_url = $vod->is_encrypt ? '' : $item['transcodeInfos'][0]['playUrl'];
             $vod->file_md5 = '-';
-            $vod->tags = explode(',', $item['basicInfo']['tag']?? '');
+            $vod->tags = $item['basicInfo']['tags'];
             $vod->cate_id = (int) $item['basicInfo']['cateId'];
             $vod->cate_name = $item['basicInfo']['cateName'];
             $response[] = $vod;
@@ -81,6 +87,12 @@ class Video extends Request
         return $response;
     }
 
+    /**
+     * @param string $id
+     * @return VideoItem
+     * @throws \think\Exception
+     * @doc https://help.polyv.net/index.html#/vod/api/video_management/manage/get_video_info
+     */
     public function read(string $id) : VideoItem
     {
         $response = [];
@@ -102,7 +114,7 @@ class Video extends Request
         $vod->is_encrypt = (bool) $item['transcodeInfos'][0]['encrypt'];
         $vod->file_mp4_url = $vod->is_encrypt ? '' : $item['transcodeInfos'][0]['playUrl'];
         $vod->file_md5 = '-';
-        $vod->tags = explode(',', $item['basicInfo']['tag']?? '');
+        $vod->tags = $item['basicInfo']['tags'];
         $vod->cate_id = (int) $item['basicInfo']['cateId'];
         $vod->cate_name = $item['basicInfo']['cateName'];
         $vod->source_data = json_encode($item, JSON_UNESCAPED_UNICODE);
@@ -110,6 +122,13 @@ class Video extends Request
         return $response;
     }
 
+    /**
+     * @param string $id
+     * @param array $data
+     * @return bool
+     * @throws \think\Exception
+     * @doc https://help.polyv.net/index.html#/vod/api/video_management/manage/update_video_info
+     */
     public function update(string $id, array $data){
         $sourceData = $this->read($id);
         if(!empty($data['cate_id']) && is_numeric($data['cate_id']) && $data['cate_id'] != $sourceData->cate_id){
@@ -124,7 +143,7 @@ class Video extends Request
         if(!empty($data['description'])){
             $queryParam['describ'] = $data['description'];
         }
-        if(!empty($data['tag'])){
+        if(!empty($data['tags'])){
             $queryParam['tag'] = $data['tags'];
         }
         if(!empty($data['title'])){
@@ -138,7 +157,11 @@ class Video extends Request
     }
 
     /**
-     * 删除视频
+     * @param string $ids
+     * @param bool $is_to_recycle
+     * @return array
+     * @throws \think\Exception
+     * @doc https://help.polyv.net/index.html#/vod/api/video_management/manage/delete_video
      */
     public function delete(string $ids, bool $is_to_recycle = true){
         $uri = "/v2/video/del-videos";
@@ -167,6 +190,14 @@ class Video extends Request
     }
 
 
+    /**
+     * 上传视频封面
+     * @param string $ids
+     * @param string $image_url
+     * @return array
+     * @throws \think\Exception
+     * @doc http://api.polyv.net/v2/video/upload-cover-image
+     */
     public function change_cover_image(string $ids, string $image_url){
         $uri = "/v2/video/upload-cover-image";
         $queryParam = [
