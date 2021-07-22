@@ -293,12 +293,12 @@ class Request
             $sContent = curl_exec($oCurl);
             $aStatus = curl_getinfo($oCurl);
             curl_close($oCurl);
-        }catch (\think\Exception $exception){
-            throw new Exception($exception->getMessage(), $exception->getCode());
+        }catch (\Exception $exception){
+            throw new VodException($exception->getMessage(), $exception->getCode());
         }
 
         if (intval($aStatus["http_code"]) !== 200) {
-            throw new Exception($sContent, $aStatus["http_code"]);
+            throw new VodException($sContent, $aStatus["http_code"]);
         }
         $json_data = json_decode($sContent, true);
         return $json_data ? $json_data : $sContent;
